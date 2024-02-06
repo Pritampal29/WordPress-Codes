@@ -6,6 +6,14 @@
  */
 ?>
 
+/**
+* Disable add new Plugin option on dashboard
+*/
+<!-- In config.php file -->
+<?php 
+	define('DISALLOW_FILE_EDIT', true);
+	define('DISALLOW_FILE_MODS', true); 
+?>
 
 /**
 * Star Ratins Given By Customer & Manage From Backend by ACF Field.
@@ -157,3 +165,57 @@ add_action('acf/init', 'acf_taxonomy_add_image_field'); ?>
     </div>
 </div>
 <?php } } } ?>
+
+
+<!-- Show Featured Image in Any-Pages -->
+<?php $featured_image = wp_get_attachment_url( get_post_thumbnail_id($post->ID) ); ?>
+<?php echo $featured_image; ?>
+
+<!-- Get Site title in footer -->
+<?php echo get_bloginfo('name');?>
+
+<!-- Fetch Logo from Site-settings menu -->
+<?php the_custom_logo(); ?>
+
+/**
+* Display Post by Category
+*/
+<?php 
+	$Project = new WP_Query(
+		array(
+			'post_type'=>'projects', 
+			'post_status'=>'publish',
+			'posts_per_page'=>'-1' ,
+			'post__not_in' / 'post__in' => array(449),
+			'orderby' => 'date' ,
+			'order' => 'DESC' ,
+			'tax_query' => array(
+				array(
+					'taxonomy' => 'TAXONOMY-NAME',
+					'field'    => 'slug',
+					'terms'    => array( 'Category_slug' ),  
+				)
+			)
+		)
+	);
+?>
+
+/**
+* Show Specific Design with condition
+*/
+<?php
+$allowed_post_ids = array(108, 449, 136, 134, 129);
+if (in_array($post->ID, $allowed_post_ids)) { ?>
+<HTML Content>
+<?php } else {?>
+<HTML Another Content>
+<?php } ?>
+
+/**
+* Restritct Content word count in listing page
+*/
+<?php
+	$content = get_the_content();
+		echo wp_trim_words( $content, 20 );
+?>
+
