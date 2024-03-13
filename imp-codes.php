@@ -214,8 +214,135 @@ if (in_array($post->ID, $allowed_post_ids)) { ?>
 /**
 * Restritct Content word count in listing page
 */
-<?php
-	$content = get_the_content();
-		echo wp_trim_words( $content, 20 );
-?>
 
+<?php echo wp_trim_words( get_the_content(), 60 ); ?>
+
+/**
+* Show Different Jobs in a Single Modal w.r.t Job id (Job PostType)
+*/
+<div class="job_list">
+    <?php           
+		$args = array(
+			'post_type' =>'jobs',
+			'post_status' =>'publish',
+			'posts_per_page' => -1,
+			'orderby' => 'date',
+			'order' => 'ASC'
+		);
+
+		$posts = new WP_Query($args);
+		if($posts->have_posts()) {
+			$i=1;
+			while($posts->have_posts()) {
+				$posts->the_post();
+				$job_id = get_the_ID();
+	?>
+    <div class="row justify-content-between align-items-center">
+        <div class="col-sm-7">
+            <h5><?php echo $i;?>. <?php the_title(); ?></h5>
+        </div>
+        <div class="col-sm-5 text-end">
+            <!-- Button trigger modal -->
+            <button type="button" class="common-btn" data-bs-toggle="modal"
+                data-bs-target="#jobModal-<?php echo $job_id; ?>"><?php the_field('button_title', $post->ID); ?>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade car-mod" id="jobModal-<?php echo $job_id; ?>" data-bs-backdrop="static"
+        data-bs-keyboard="false" tabindex="-1" aria-labelledby="jobModalLabel-<?php echo $job_id; ?>"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="jobModalLabel-<?php echo $job_id; ?>">
+                        <img src="<?php the_field('site_logo','option');?>" alt="">
+                        <?php the_title(); ?>
+                    </h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <?php the_content(); ?>
+                    <?php echo do_shortcode('[contact-form-7 id="2982b50" title="Job CV Upload"]'); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php $i++; } 
+		wp_reset_postdata();
+	}
+	?>
+</div>
+
+
+<?php
+/**
+ *  Add special metabox for ant posttype
+ */
+
+// Add a metabox to the 'events' post type
+function add_event_metabox() {
+    add_meta_box(
+        'event_details_metabox',
+        'Event Details',
+        'render_event_metabox',
+        'events',
+        'normal', // You can use 'side' or 'advanced' for the metabox position
+        'high'    // You can use 'low', 'default', or 'high' for the priority
+    );
+}
+add_action('add_meta_boxes', 'add_event_metabox');
+
+// Render the content for the metabox
+function render_event_metabox($post) {
+    // Retrieve existing values from the database
+    $event_date = get_post_meta($post->ID, '_event_date', true);
+
+    // Output the HTML for the form
+    ?>
+    <label for="event_date">Event Date:</label>
+    <input type="text" id="event_date" name="event_date" value="<?php echo esc_attr($event_date); ?>" placeholder="YYYY-MM-DD" />
+
+    <?php
+}
+
+// Save the metabox data
+function save_event_metabox($post_id) {
+    // Check if it's not an autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+
+    // Check if the nonce is set
+    if (!isset($_POST['event_metabox_nonce']) || !wp_verify_nonce($_POST['event_metabox_nonce'], 'event_metabox_nonce')) return;
+
+    // Check if the current user has permission to edit the post
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    // Sanitize and save the data
+    $event_date = sanitize_text_field($_POST['event_date']);
+    update_post_meta($post_id, '_event_date', $event_date);
+}
+add_action('save_post', 'save_event_metabox');
+
+
+/**
+ * Show this to frontend
+ */
+
+// Assuming you are within the loop
+while (have_posts()) : the_post();
+
+    // Get the event date from post meta
+    $event_date = get_post_meta(get_the_ID(), '_event_date', true);
+
+    // Output the event date
+    if (!empty($event_date)) {
+        echo '<p>Event Date: ' . esc_html($event_date) . '</p>';
+    }
+
+    // Your other post content goes here
+    the_title();
+    the_content();
+
+endwhile;
+?>
