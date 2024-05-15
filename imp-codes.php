@@ -6,6 +6,48 @@
  */
 ?>
 
+
+<?php
+/**
+ * Change login URL with code functions.php
+ */
+// Redirect /wp-admin to 404 page
+function redirect_wp_admin_to_404() {
+    if (strpos($_SERVER['REQUEST_URI'], '/wp-admin') !== false && !is_user_logged_in()) {
+        global $wp_query;
+        $wp_query->set_404();
+        status_header(404);
+        include(get_404_template());
+        exit;
+    }
+}
+add_action('init', 'redirect_wp_admin_to_404');
+
+// Redirect /cd-editor to custom login page
+function redirect_cd_editor_to_custom_login() {
+    if (strpos($_SERVER['REQUEST_URI'], '/cd-editor') !== false && !is_user_logged_in()) {
+        wp_redirect('http://localhost/pritam/Manafort/wp-login.php');
+        exit;
+    }
+}
+add_action('init', 'redirect_cd_editor_to_custom_login');
+?>
+
+<!-- 
+/**
+ * Add Dinamic field in cf7
+ */ -->
+ 
+<!-- // Add this in CF7 -->
+[text your-title readonly "your-post-title"] 
+<!-- // Add this Script -->
+<script>
+	document.addEventListener( 'DOMContentLoaded', function() {
+		var postTitle = '<?php echo addslashes( get_the_title() ); ?>';
+		document.querySelector( 'input[name="your-title"]' ).value = postTitle;
+	} );
+</script>
+
 <?php
 /** 
  * Remove WordPress version number from scripts and styles
@@ -40,6 +82,27 @@ add_filter( 'style_loader_src', 'remove_script_version' );
 	define('DISALLOW_FILE_EDIT', true);
 	define('DISALLOW_FILE_MODS', true); 
 ?>
+
+/**
+<!-- Add Error message in Comments form submit without any value -->
+*/
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const commentForm = document.getElementById('commentform');
+        const errorMessage = document.createElement('p');
+        errorMessage.classList.add('error-message', 'text-danger');
+        
+        commentForm.addEventListener('submit', function(event) {
+            const commentField = document.getElementById('comment');
+            if (commentField.value.trim() === '') {
+                event.preventDefault();
+                errorMessage.textContent = 'Please fill all required * fields.';
+                commentForm.insertBefore(errorMessage, commentForm.firstChild);
+            }
+        });
+    });
+</script>
+
 
 /**
 * Star Ratins Given By Customer & Manage From Backend by ACF Field.
@@ -417,3 +480,42 @@ add_action( 'manage_posts_custom_column', 'gt_posts_custom_column_views' ); ?>
 
 <?php gt_set_post_view(); // Add this to single-post Page ?>
 <strong><i class="fa-solid fa-eye"></i>  <?php echo gt_get_post_view(); ?></strong>  // Add this to listing Page
+
+
+<?php
+	/**
+	 * Hide Plugin from Dashboard Plugin list
+	*/
+
+	 function hide_specific_plugins( $plugins ) {
+		$plugins_to_hide = array(
+			'side-cart-woocommerce/xoo-wsc-main.php',
+			'woo-variation-gallery/woo-variation-gallery.php',
+		);
+		foreach ( $plugins_to_hide as $plugin ) {
+			if ( isset( $plugins[ $plugin ] ) ) {
+				unset( $plugins[ $plugin ] );
+			}
+		}
+		return $plugins;
+	}
+	
+	add_filter( 'all_plugins', 'hide_specific_plugins' );
+	
+
+
+    /**
+	* Add Extra Fields into Database during Registration Process
+	*/
+
+	function save_extra_customer_fields( $customer_id ) {
+		if ( isset( $_POST['first_name'] ) && ! empty( $_POST['first_name'] ) ) {
+			update_user_meta( $customer_id, 'first_name', sanitize_text_field( $_POST['first_name'] ) );
+		}
+		
+		if ( isset( $_POST['last_name'] ) && ! empty( $_POST['last_name'] ) ) {
+			update_user_meta( $customer_id, 'last_name', sanitize_text_field( $_POST['last_name'] ) );
+		}
+	}
+	
+	add_action( 'woocommerce_created_customer', 'save_extra_customer_fields' );
