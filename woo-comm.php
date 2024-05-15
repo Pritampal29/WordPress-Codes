@@ -108,3 +108,45 @@ echo $price;
             // Add Open Class on Woo-Commerce Sidebar & Open Class on Woo-Commerce Main Content Code Here
         }
     }
+/****************************************************************************************/
+/**
+* Show cart contents / total Ajax (IN HEADER MENU CART BUTTON)
+* Add To theme functions.php
+*/
+function custom_enqueue_scripts() {
+    wp_enqueue_script('custom-ajax-cart', get_template_directory_uri() . '/js/custom-ajax-cart.js', array('jquery'), null, true );
+
+    wp_localize_script('custom-ajax-cart', 'ajax_cart_params', array(
+	'ajax_url' => admin_url('admin-ajax.php')
+    ));
+}
+add_action('wp_enqueue_scripts', 'custom_enqueue_scripts');
+
+function update_cart_count() {
+    wp_send_json( array(
+	'cart_count' => WC()->cart->get_cart_contents_count()
+    ));
+}
+
+add_action('wp_ajax_update_cart_count', 'update_cart_count');
+add_action('wp_ajax_nopriv_update_cart_count', 'update_cart_count');
+?>
+<!-- Create a file to Js folder "custom-ajax-cart.js" & Add this Js Code -->
+<script>
+jQuery(document).ready(function($) {
+    $(document.body).on('added_to_cart removed_from_cart', function() {
+	$.ajax({
+	    url: ajax_cart_params.ajax_url,
+	    type: 'POST',
+	    data: {
+		action: 'update_cart_count'
+	    },
+	    success: function(response) {
+		$('.cart_count').text(response.cart_count);
+	    }
+	});
+    });
+});
+</script>
+<?php 
+/****************************************************************************************/
