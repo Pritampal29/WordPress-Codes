@@ -1,6 +1,6 @@
 /**
 *
-* ISOTOPE Gallery Used for Various (Blogs,News,Jobs etc) Pages.
+* ISOTOPE Gallery Used for Various (Blogs,News,Jobs etc) Pages.(JS Library)
 *
 */
 
