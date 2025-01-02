@@ -33,6 +33,41 @@ function redirect_cd_editor_to_custom_login() {
 add_action('init', 'redirect_cd_editor_to_custom_login');
 ?>
 
+<?php
+/**
+* #################################################################
+*		Show an Extra Column(Template Name) on Every Pages
+* #################################################################
+*/	
+	function add_template_column($columns) {
+
+		$new_columns = array();
+		
+		foreach ($columns as $key => $value) {
+			if ($key == 'author') {
+				$new_columns['template'] = __('Template Name');
+			}
+			$new_columns[$key] = $value;
+		}
+		return $new_columns;
+	}
+	add_filter('manage_page_posts_columns', 'add_template_column');
+
+	function display_template_column($column, $post_id) {
+		if ($column == 'template') {
+			$template = get_page_template_slug($post_id);
+			if ($template) {
+				$templates = wp_get_theme()->get_page_templates();
+				echo isset($templates[$template]) ? $templates[$template] : $template;
+			} else {
+				echo __('Default Template');
+			}
+		}
+	}
+	add_action('manage_page_posts_custom_column', 'display_template_column', 10, 2); ?>
+
+
+
 <!-- 
 /**
  * Add Dinamic field in cf7
